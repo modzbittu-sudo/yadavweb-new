@@ -15,3 +15,9 @@ services:
         value: 10000
       - key: MAX_BOTS
         value: 5
+      - key: AUTO_JOIN
+        value: false
+      - key: BOT_TOKENS
+        value: ""
+      - key: VOICE_CHANNEL_IDS
+        value: ""

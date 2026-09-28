@@ -1,6 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 
+function readTokenFile(filePath) {
+  if (!filePath || typeof filePath !== 'string') {
+    return [];
+  }
+
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+
+  const content = fs.readFileSync(filePath, 'utf8');
+  return parseTokenList(content);
+}
+
 function parseTokenList(value) {
   if (Array.isArray(value)) {
     return value
@@ -83,4 +96,5 @@ module.exports = {
   parseTokenList,
   addTokenToList,
   persistTokenList,
+  readTokenFile,
 };
