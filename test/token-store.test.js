@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { parseTokenList, addTokenToList, persistTokenList, readTokenFile } = require('../token-store');
+const { resolvePort } = require('../port-config');
 
 test('parseTokenList reads comma and newline separated tokens', () => {
   const tokens = parseTokenList('abc, def\nghi, jkl');
@@ -40,4 +41,10 @@ test('readTokenFile accepts newline and comma separated token text files', () =>
   } finally {
     fs.unlinkSync(filePath);
   }
+});
+
+test('resolvePort prefers an explicit PORT but defaults to Render-safe port in production', () => {
+  assert.equal(resolvePort({ PORT: '8080', NODE_ENV: 'production' }), 8080);
+  assert.equal(resolvePort({ NODE_ENV: 'production' }), 10000);
+  assert.equal(resolvePort({}), 3000);
 });

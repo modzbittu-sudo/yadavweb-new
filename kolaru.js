@@ -49,6 +49,8 @@ function readRequestText(req) {
   });
 }
 
+const { resolvePort } = require('./port-config');
+
 const rawTokens = process.env.BOT_TOKENS || process.env.BOT_TOKEN || '';
 let tokens = parseTokenList(rawTokens);
 const autoJoin = (process.env.AUTO_JOIN || 'false').toLowerCase() === 'true';
@@ -57,7 +59,7 @@ const channelIds = parseList(rawChannels);
 const rawMaxBots = Number(process.env.MAX_BOTS || process.env.MAX_BOT_COUNT || 0);
 const maxBots = Number.isFinite(rawMaxBots) && rawMaxBots > 0 ? Math.floor(rawMaxBots) : Number.MAX_SAFE_INTEGER;
 const host = process.env.HOST || process.env.HOSTNAME || '0.0.0.0';
-const port = Number(process.env.PORT || 3000);
+const port = resolvePort(process.env);
 const keepAliveMs = Number(process.env.KEEPALIVE_MS || 15000);
 const envFilePath = path.join(process.cwd(), '.env');
 
@@ -1219,10 +1221,35 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ error: 'not found' }));
 });
 
-server.listen(port, host, () => {
-  console.log(`🌐 Health server listening on ${host}:${port}`);
-});
+function startServer() {
+  server.listen(port, host, () => {
+    console.log(`🌐 Health server listening on ${host}:${port}`);
+  });
 
-setInterval(() => {
-  process.stdout.write('.');
-}, 60000);
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      const fallbackPort = port + 1;
+      console.warn(`⚠️ Port ${port} is already in use. Retrying on ${fallbackPort}.`);
+      server.close();
+      server.listen(fallbackPort, host, () => {
+        console.log(`🌐 Health server listening on ${host}:${fallbackPort}`);
+      });
+      return;
+    }
+
+    console.error(`❌ Server failed to start: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
+
+if (require.main === module) {
+  startServer();
+
+  setInterval(() => {
+    process.stdout.write('.');
+  }, 60000);
+}
+
+module.exports = {
+  startServer,
+};
