@@ -69,7 +69,7 @@ if (tokens.length === 0) {
 
 // --- SINGLE GLOBAL AUDIO PLAYER (perfect sync for all bots) ---
 let globalVolume = 12.0;
-let globalMute = true;
+let globalMute = false;
 let globalDeaf = false;
 let globalAudioProcess = null;
 
